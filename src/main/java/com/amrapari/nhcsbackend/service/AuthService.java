@@ -1,0 +1,79 @@
+package com.amrapari.nhcsbackend.service;
+
+import com.amrapari.nhcsbackend.domain.Doctor;
+import com.amrapari.nhcsbackend.domain.Patient;
+import com.amrapari.nhcsbackend.domain.Role;
+import com.amrapari.nhcsbackend.domain.User;
+import com.amrapari.nhcsbackend.dto.AuthRequest;
+import com.amrapari.nhcsbackend.dto.AuthResponse;
+import com.amrapari.nhcsbackend.dto.RegisterRequest;
+import com.amrapari.nhcsbackend.repository.DoctorRepository;
+import com.amrapari.nhcsbackend.repository.PatientRepository;
+import com.amrapari.nhcsbackend.repository.UserRepository;
+import com.amrapari.nhcsbackend.security.JwtService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class AuthService {
+    private final UserRepository userRepository;
+    private final PatientRepository patientRepository;
+    private final DoctorRepository doctorRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
+
+    public AuthResponse register(RegisterRequest request) {
+        var user = User.builder()
+                .username(request.getUsername())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(request.getRole() != null ? request.getRole() : Role.PATIENT)
+                .build();
+        userRepository.save(user);
+
+        if (user.getRole() == Role.PATIENT) {
+            var patient = Patient.builder()
+                    .user(user)
+                    .fullName(request.getFullName())
+                    .build();
+            patientRepository.save(patient);
+        } else if (user.getRole() == Role.DOCTOR) {
+            var doctor = Doctor.builder()
+                    .user(user)
+                    .fullName(request.getFullName())
+                    .build();
+            doctorRepository.save(doctor);
+        }
+
+        var jwtToken = jwtService.generateToken(user);
+        return AuthResponse.builder()
+                .token(jwtToken)
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .build();
+    }
+
+    public AuthResponse authenticate(AuthRequest request) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getUsername(),
+                        request.getPassword()
+                )
+        );
+        var user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow();
+        var jwtToken = jwtService.generateToken(user);
+        return AuthResponse.builder()
+                .token(jwtToken)
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .build();
+    }
+}
