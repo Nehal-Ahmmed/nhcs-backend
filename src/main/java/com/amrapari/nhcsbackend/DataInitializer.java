@@ -3,8 +3,12 @@ package com.amrapari.nhcsbackend;
 import com.amrapari.nhcsbackend.domain.Role;
 import com.amrapari.nhcsbackend.domain.User;
 import com.amrapari.nhcsbackend.domain.Hospital;
+import com.amrapari.nhcsbackend.domain.Patient;
+import com.amrapari.nhcsbackend.domain.Doctor;
 import com.amrapari.nhcsbackend.repository.UserRepository;
 import com.amrapari.nhcsbackend.repository.HospitalRepository;
+import com.amrapari.nhcsbackend.repository.PatientRepository;
+import com.amrapari.nhcsbackend.repository.DoctorRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,28 +20,55 @@ public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final HospitalRepository hospitalRepository;
+    private final PatientRepository patientRepository;
+    private final DoctorRepository doctorRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) throws Exception {
-        createMockUserIfNotExists("patient", "patient@nhcs.gov", Role.PATIENT);
-        createMockUserIfNotExists("doctor", "doctor@nhcs.gov", Role.DOCTOR);
-        createMockUserIfNotExists("hospital", "hospital@nhcs.gov", Role.HOSPITAL);
-        createMockUserIfNotExists("govt", "govt@nhcs.gov", Role.GOVT);
+        // Mock users have been removed per user request
         
         createMockHospitalsIfEmpty();
     }
 
-    private void createMockUserIfNotExists(String username, String email, Role role) {
+    private void createMockUserIfNotExists(String username, String email, java.util.Set<Role> roles) {
         if (userRepository.findByUsername(username).isEmpty()) {
             User user = User.builder()
                     .username(username)
                     .email(email)
                     .password(passwordEncoder.encode("password123"))
-                    .role(role)
+                    .roles(new java.util.HashSet<>(roles))
                     .build();
             userRepository.save(user);
+
+            if (roles.contains(Role.PATIENT)) {
+                Patient patient = Patient.builder()
+                        .user(user)
+                        .fullName(capitalize(username) + " Mock Citizen")
+                        .contactNumber("+8801700000001")
+                        .gender("Male")
+                        .address("Dhaka, Bangladesh")
+                        .build();
+                patientRepository.save(patient);
+            }
+
+            if (roles.contains(Role.DOCTOR)) {
+                Doctor doctor = Doctor.builder()
+                        .user(user)
+                        .fullName("Dr. " + capitalize(username))
+                        .specialization("General Physician & Outbreak Expert")
+                        .licenseNumber("MBBS-54321")
+                        .contactNumber("+8801799999999")
+                        .hospitalAffiliation("Dhaka Medical College Hospital")
+                        .build();
+                doctorRepository.save(doctor);
+            }
         }
+    }
+
+    private String capitalize(String str) {
+        if (str == null || str.isEmpty()) return "";
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 
     private void createMockHospitalsIfEmpty() {

@@ -16,10 +16,13 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import java.util.Set;
+import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+
     private final UserRepository userRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
@@ -27,22 +30,30 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
+
     public AuthResponse register(RegisterRequest request) {
+        Set<Role> roles = new HashSet<>();
+        roles.add(Role.PATIENT);
+        if (request.getRole() != null && request.getRole() != Role.PATIENT) {
+            roles.add(request.getRole());
+        }
+
         var user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole() != null ? request.getRole() : Role.PATIENT)
+                .roles(roles)
                 .build();
         userRepository.save(user);
 
-        if (user.getRole() == Role.PATIENT) {
+        if (user.getRoles().contains(Role.PATIENT)) {
             var patient = Patient.builder()
                     .user(user)
                     .fullName(request.getFullName())
                     .build();
             patientRepository.save(patient);
-        } else if (user.getRole() == Role.DOCTOR) {
+        }
+        if (user.getRoles().contains(Role.DOCTOR)) {
             var doctor = Doctor.builder()
                     .user(user)
                     .fullName(request.getFullName())
@@ -55,7 +66,7 @@ public class AuthService {
                 .token(jwtToken)
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .role(user.getRole())
+                .roles(user.getRoles())
                 .build();
     }
 
@@ -73,7 +84,7 @@ public class AuthService {
                 .token(jwtToken)
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .role(user.getRole())
+                .roles(user.getRoles())
                 .build();
     }
 }
