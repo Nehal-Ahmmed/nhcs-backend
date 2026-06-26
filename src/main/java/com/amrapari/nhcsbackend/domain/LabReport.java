@@ -28,8 +28,7 @@ public class LabReport {
     private String doctorName;
     private String status;
 
-    @Lob
-    @Column(length = 2000)
+    @Column(columnDefinition = "TEXT")
     private String aiInterpretation;
 
     @OneToMany(mappedBy = "labReport", cascade = CascadeType.ALL, orphanRemoval = true)

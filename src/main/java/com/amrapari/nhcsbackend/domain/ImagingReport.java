@@ -25,11 +25,9 @@ public class ImagingReport {
     private String doctorName;
     private String imageUrl;
 
-    @Lob
-    @Column(length = 2000)
+    @Column(columnDefinition = "TEXT")
     private String findings;
 
-    @Lob
-    @Column(length = 2000)
+    @Column(columnDefinition = "TEXT")
     private String impression;
 }
