@@ -40,6 +40,7 @@ INSERT INTO hospitals (id, facility_id, name, division, classification, total_be
 INSERT INTO hospitals (id, facility_id, name, division, classification, total_beds, occupied_beds, compliance_score, status) VALUES (29, 'FAC-1024', 'Jashore General Hospital', 'Khulna', 'Public', 250, 240, 80, 'Active');
 
 -- 1. Insert Users
+INSERT INTO users (id, username, password, email) VALUES (1, 'nehal', '$2a$10$zrHywZZYAw3RZP1ACnltRuuLq8jsTtu7X0MM9.jVXiFSJz32lbStu', 'nehal@gmail.com');
 INSERT INTO users (id, username, password, email) VALUES (1000, 'patient_100', '$2a$10$LPGHWPpCmjSpAGnihunkTORQaC5aZjqrX8HQscsFX/eecTAX5IAbi', 'patient_100@nudheb.gov');
 INSERT INTO users (id, username, password, email) VALUES (1001, 'patient_101', '$2a$10$LPGHWPpCmjSpAGnihunkTORQaC5aZjqrX8HQscsFX/eecTAX5IAbi', 'patient_101@nudheb.gov');
 INSERT INTO users (id, username, password, email) VALUES (1002, 'patient_102', '$2a$10$LPGHWPpCmjSpAGnihunkTORQaC5aZjqrX8HQscsFX/eecTAX5IAbi', 'patient_102@nudheb.gov');
